@@ -1,0 +1,129 @@
+Multi Monitor Desktop Wallpaper for Gnome
+
+guyverix@yahoo.com (2011)
+
+These scripts allow for spanning wallpaper in Gnome across monitors.  This was
+origionally for my Nvidia "Twinview" system since I could not find anything that I
+liked out on the net.  Pieces were lifted from convert tutorials, and other bash scripts.
+Once they were all glued together, it worked pretty well.  So I figure someone else
+might lile to use these for their own system.  
+
+The scripts require ImageMagick to be installed, but that is the only requirement 
+that I am aware of that is mandiitory to run the scirpts on any platform.  
+The file "wallpapers" IS a Ubuntu/Debian skeleton file, so I doubt it will work 
+for other distros in controlling the scripts, but should be able to be
+easily edited for RH, or others.  The scripts can be called by hand, without
+the controller, and the options for them are listed out below per file.
+
+Currently I am using 6 heads, in 2 rows.  While using this script, I found that
+it was really easy to change things up a bit.  Instead of having all six monitors
+defined, I only defined 2, and changed the span sizes and max span sizes.  This 
+causes the wallpapers to blow up to full screens and depending on what you have
+spanning minimums set to, either a really nice blown up wallpaper, or two side
+by side, etc.  Feel free to play with the multi.cfg to find what you like for your
+system.  It will not damage the images.lst file while you are testing.  Use the 
+command "wallpapers instant" to do your testing, as that does not start the daemon.
+The daemon only reads the config once, where instant will show your changes right 
+then, so you can debug things further.
+
+Another interesting thing that can be done for example is to have a certain...
+..."work safe, or wife safe".... set of images that only run at a certain time.
+Heh, that has saved me more than once.  Just grep the images out of the images.lst
+file into a new one, images_safe.lst maybe.  Then rename the images.lst, to 
+something like images_full.lst.  Once you have done that, just use a 
+cron entry to symlink to which ever one you want to use.  It works well
+for me, YMMV though.
+
+Do remember that image manipulation can be CPU intense.  I have niced things down
+so they do not cause your system to freeze, but it also means that things like
+the "instant" option are really not "instant".  Usually it takes about 5-10 seconds
+for the wallpaper to change with the "instant" command.  In daemon mode, this does not
+really matter other than you may sometimes see CPU spikes while the images are being 
+changed up.
+
+How to use the scripts:
+The scripts were coded to expect to live in "/home/$USER/.multi_wall/" directory.
+** Thats your home directory, not a literal $USER directory (for the n00bs).
+This can for the most part be adjusted, however two output files will put data in 
+odd places then.  It should still work, but I personally try not to mess too much with 
+ohter peoples home directorys and spew crap all over.
+
+There are four files included here and one advanced example file.
+
+wallpapers:
+The controller (Ubuntu init skeleton actually), this is what you will
+normally use to start and stop the application as well as perform other maintenane.
+Since this is a wrapper for the main scripts, it can be ignored if you are not running
+Ubuntu or a Debian derived system.  You can still call the script directly.  
+
+The normal options for wallpapers are: start|stop|status|instant|new|update|random.
+
+start/stop: I am sure you can figure those out.
+status:     "Is the daemon running" check.
+instant:    Change the wallpaper once, NOW! and exit out.
+new:        Reindex all wallpapers in the directory specified by multi.cfg (destructive removal
+            of your old images.lst file will happen!)
+update:     Add all wallpapers added within the last 24 hours.  (Does not delete however)
+random:     This will take your index of wallpapers and reorder them.  This is due to 
+            the fact that find is used to get all your wallpapers together.  If they are 
+            in any kind of order it may be boring for you.  This mixes all of 
+            the files up.
+
+multi.cfg:
+This is where all of your configuration information needs to go.  The scripts suopport
+n+1 monitors, however the config gets to be a bit of a PITA to get just right.
+You will need to know the resolution of your monitors, as well as decide options for
+what sizes of wallpapers you would like to span the desktop vs. just be in one monitor.
+
+Most of the options are self explanitory, but some need a bit of though to use.
+I have added multi.cfg.example (currently used exactly as is for my station).
+
+INDEX:              list of paths to check for wallpapers
+LIST:               path to where your images.lst file resides
+ROWS:               How many rows of monitors you have. (Minimum 1, max ?)
+
+R1_[#]="####x#####":Important!  This is where you define the resolution, and order 
+                    of the monitors.  This starts counting from ZERO, NOT ONE.
+                    Example: R1_[0]="1280x1024"
+ORIENT:             Horizontal rows, or vertical columns of monitors
+SPAN_SIZE_R#        Define your ROW spanning size
+SPAN_SIZE_RT        Define your entire desktop spanning size
+R#_SIZE_SPAN_X      Minimum width to be considered for spanning row#
+R#_SIZE_SPAN_Y      Minimum height to be considered for spanning row#
+RT_SIZE_SPAN_X	    Minimum width to be considered for spanning the entire desktop area
+RT_SIZE_SPAN_Y      Minimum height to be considered for spanning the entire desktop area
+
+GRAVITY#            Not fully implemented.  Defines how images are glued togetner.  The
+                    -gravity option in covert uses this to define center, top, bottom, etc
+                    for making the images look correct when monitors of different resolutions
+                    are being used.  I have not fully finished the coding for this, so it 
+                    is recommended to use the defaults that are shown in the exmaple for all
+                    gravity options, and paly to get the results are expecting.
+SIZE_X              Minimum width to even bother using for a wallpaper.
+SIZE_Y              Minimum height to be used as a wallpaper. Note: X and Y must both
+                    be met to be used for a wallpaper.
+TIMER	            How often in seconds to change the wallpaper
+BG_COLOR            Background color for the wallpaper where it could not be resized without
+                    stretching or damaging the aspect ratio.
+REFRESH             Not fully implemented.  This will cause the script when running to check
+                    every once in a while for new files added in # number of days.
+SEARCH              Define either RANDOM or psuedo SEQUENCE to choose images for wallpapers.
+                    Random is nice if you have less than 100 wallpapers or so, but for very
+                    large collections SEQUENCE makes it so you never see a repeat.  It will just
+                    keep cycling and reset its counter once it hits the end of your images.lst file.
+
+multi_update.sh:
+This is a utility for doing changes to your images.lst file.  If it is needed to be run manually, 
+the options it takes are New Update Randomize.  These will do the following:
+New:       Delete images.cfg and generate a new one from scratch.  Depending on how many 
+           files you have this may take a long time.
+Update:    Look for new wallpapers to add to the existing images.lst file.
+Randomize: Take the current images.lst file and shuffle it into a new order. 
+
+multi_wallpapers.sh
+This is the "brains" of the operation.  If you call it directly it will run, however it 
+does NOT background itself.  So calling this for Linux distros other than Ubuntu should be
+done like this: "nohup ./multi_wallpapers.sh & ".  The script passes along options to multi_update.sh
+as well as running the "instant" option internally and exiting out at completion.  Perhaps 
+if I get some more time in the future, I will try to write an agnostic daemon control for it.
+
