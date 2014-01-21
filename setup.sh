@@ -14,6 +14,17 @@ else
   echo "root"
 fi
 }
+canonicalpath=`readlink -f $0`
+location=`dirname "${canonicalpath}"`
+
+if [ ! "${location}" == "/home/${USER}/.multi_wall" ];then
+  if [ ! -e "~/.multi_wall" ];then
+    mkdir ~/.multi_wall
+  fi
+  cp -R * ~/.multi_wall/
+else
+  echo "It appears that this script is already running in .multi_wall"
+fi
 
 USERID=`got_root`
 if [ "${USERID}" == "root" ];then
