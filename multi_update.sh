@@ -6,7 +6,7 @@
 #         USAGE:  ./multi_update.sh
 #
 #   DESCRIPTION:  This script is part of multi_wallapers.  This is the indexer
-#                 and updater for the images_v3.lst file.  It is designed to be
+#                 and updater for the images.lst file.  It is designed to be
 #                 called from the main script itself, so that the main script
 #                 can get new indexing values when wallpapers are added.
 #
@@ -36,55 +36,50 @@ fi
 
 case $1 in
    [Uu]*)
-      echo "`date` Starting an update of the images_v3.lst file"
-      echo "Indexing path data defined in config file..."
-      echo "This may take awhile depending on how many new files there are..."
+   echo "`date` Starting an update of the images.lst file"
+   echo "Indexing path data defined in config file..."
+   echo "This may take awhile depending on how many new files there are..."
+   PROC=`cat /proc/cpuinfo | grep -c processor`
 
    while read x; do
-   SIZE=`identify -verbose "$x" | grep 'Geometry:' | sed 's/.*://' | sed 's/+.*//' | sed 's/[ ]//g'`
-   if [ -n "${SIZE}" ];then
-      X_CHECK=`echo ${SIZE} | awk -F'x' '{print $1}'`
-      Y_CHECK=`echo ${SIZE} | awk -F'x' '{print $2}'`
-      if [ ${X_CHECK} -gt ${SIZE_X} -a ${Y_CHECK} -gt ${SIZE_Y} ];then
-         echo "'${x}' '${SIZE}'" >> images_v3.lst
-         echo "Added: ${x} "
-      fi
-   fi
+     ${LOCATION}/identify.sh "${x}" &
+     while [ `ps aux | grep -c '[i]dentify'` -gt ${PROC} ]; do
+       sleep 1
+     done
    done < <(find ${INDEX} -follow -type f -mtime -${REFRESH} \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
    # Do not allow duplicate entries
-   touch images_v3.tmp
-   cat images_v3.lst | uniq  >> images_v3.tmp
-   mv images_v3.tmp images_v3.lst
-      ;;
+   touch ${LOCATION}/images_full.tmp
+   cat ${LOCATION}/images_full.lst | uniq  >> ${LOCATION}/images_full.tmp
+   mv ${LOCATION}/images_full.tmp ${LOCATION}/images_full.lst
+   ;;
    [Nn]*)
-      echo "`date` Full index of all images starting for images_v3.lst file"
-      rm -f images_v3.lst
-      touch images_v3.lst
+   echo "`date` Full index of all images starting for images_full.lst file"
+   rm -f ${LOCATION}/images_full.lst
+   touch ${LOCATION}/images_full.lst
 
-      echo "Indexing path data defined in config file..."
-      echo "This may take awhile depending on how many files there are..."
+   echo "Indexing path data defined in config file..."
+   echo "This may take awhile depending on how many files there are..."
 
-   while read x; do
-   SIZE=`identify -verbose "$x" | grep 'Geometry:' | sed 's/.*://' | sed 's/+.*//' | sed 's/[ ]//g'`
-   if [ -n "${SIZE}" ];then
-      X_CHECK=`echo ${SIZE} | awk -F'x' '{print $1}'`
-      Y_CHECK=`echo ${SIZE} | awk -F'x' '{print $2}'`
-      if [ ${X_CHECK} -gt ${SIZE_X} -a ${Y_CHECK} -gt ${SIZE_Y} ];then
-         echo "'${x}' '${SIZE}'" >> images_v3.lst
-      fi
-   fi
-   done < <(find ${INDEX} -follow -type f \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
-
-      ;;
+   echo "Finding all image files to verify"
+   find ${INDEX} -follow -type f \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \; >> /tmp/image_wip_$$.lst
+   PROC=`cat /proc/cpuinfo | grep -c processor`
+   for x in `cat /tmp/image_wip_$$.lst` ;do
+     ${LOCATION}/identify.sh "${x}" &
+     while [ `ps aux | grep -c '[i]dentify'` -gt ${PROC} ]; do
+       sleep 1
+     done
+   done
+   rm -f /tmp/image_wip$$.lst
+   ;;
    [Rr]*)
-     echo "Randomize the images.lst file"
-     cat ${LIST} | while read line; do echo "$RANDOM $line"; done | sort | sed -r 's/^[0-9]+ //' > ${LOCATION}/images.changed
-     mv ${LOCATION}/images.changed ${LIST}
-     ;;
+   echo "Randomize the images.lst file"
+   cat ${LIST} | while read line; do echo "$RANDOM $line"; done | sort | sed -r 's/^[0-9]+ //' > ${LOCATION}/images.changed
+   mv ${LOCATION}/images.changed ${LIST}
+   ;;
    *)
-      echo "No valid options given, exiting before I do something wrong"
-      echo "Valid options for this script are N (new) U (Update) R (Randomize) image list"
-      ;;
+   echo "No valid options given, exiting before I do something wrong"
+   echo "Valid options for this script are N (new) U (Update) R (Randomize) image list"
+   ;;
 esac
 
 exit 0

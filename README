@@ -1,8 +1,8 @@
-Multi Monitor Desktop Wallpaper for Gnome
+Multi Monitor Desktop Wallpaper for Gnome / Cinnamon / XFCE
 
-guyverix@yahoo.com (2011)
+guyverix@yahoo.com (2014)
 
-These scripts allow for spanning wallpaper in Gnome across monitors.  This was
+These scripts allow for spanning wallpapers in Gnome/XFCE/Cinnamon across monitors.  This was
 origionally for my Nvidia "Twinview" system since I could not find anything that I
 liked out on the net.  Pieces were lifted from convert tutorials, and other bash scripts.
 Once they were all glued together, it worked pretty well.  So I figure someone else
@@ -122,8 +122,19 @@ Randomize: Take the current images.lst file and shuffle it into a new order.
 
 multi_wallpapers.sh
 This is the "brains" of the operation.  If you call it directly it will run, however it 
-does NOT background itself.  So calling this for Linux distros other than Ubuntu should be
-done like this: "nohup ./multi_wallpapers.sh & ".  The script passes along options to multi_update.sh
-as well as running the "instant" option internally and exiting out at completion.  Perhaps 
-if I get some more time in the future, I will try to write an agnostic daemon control for it.
+does NOT daemonize itself unless the arguments are given. To do so outside of the "skeleton" init it is
+done like this: "nohup ./multi_wallpapers.sh start & ".  The script passes along options to multi_update.sh
+as well as running the "instant" option internally and exiting out at completion.  
 
+identify.sh
+This is used to find the size of the wallpapers and create the index of them.  It was split
+out so that we could "throttle" things down a bit but still have parallel discovery.  Currently
+the discovery pauses if we have a higher thread count than we do processor count.  The script itself
+is fast and not cpu heavy, but it does get a bit disk IO intense doing thousands of images.  Currently 
+my system does > 11000 images in about 10 minutes, YMMV however.
+
+setup.sh
+This is a basic setup that is going to add wallpapers to /usr/local/bin so you can simply call wallpapers.
+This is not the best way of doing things, however I hate doing big modifications to machines that I dont know 
+the state of, so this is probably the "safest".  You do need sudo privs for this script, but do not call
+the script like sudo ./setup.sh, as it will complain.  I dont like running as root more than I have to.
