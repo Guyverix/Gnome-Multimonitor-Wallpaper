@@ -202,25 +202,31 @@ merge_descrete() {
 #       RETURNS:  none
 #===============================================================================
 create_merge() {
-  #echo create merge!
-  if [ "${ORIENT}" == "horizontal" ];then
-    local merge="-"
+  if [ "${WIN_MANAGER}" == "XFCE" ];then
+    FOO=0
   else
-    local merge="+"
-  fi
-
-  for row_counts in `seq 1 ${ROWS}`;do
-    local images="${images} /tmp/multi_wall_row_${row_counts}.jpg"
-  done
-  local row_size=${SPAN_SIZE_RT}
-  #nice  convert ${images} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${merge}append ${LOCATION}/background.jpg
-  convert ${images} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${merge}append ${LOCATION}/background.jpg
-  if [ "${WIN_MANAGER}" == "GNOME" ];then
-    gconftool-2 --set "/desktop/gnome/background/picture_options" --type string "spanned"
-    gconftool-2 -t string -s /desktop/gnome/background/picture_filename ${LOCATION}/background.jpg
-  else
-    gsettings set org.gnome.desktop.background picture-options 'spanned'
-    gsettings set org.gnome.desktop.background picture-uri file://"${LOCATION}/background.jpg"
+    #echo create merge! Gnome/Cinnamon only
+    if [ "${ORIENT}" == "horizontal" ];then
+      local merge="-"
+    else
+      local merge="+"
+    fi
+    for row_counts in `seq 1 ${ROWS}`;do
+      local images="${images} /tmp/multi_wall_row_${row_counts}.jpg"
+    done
+    local row_size=${SPAN_SIZE_RT}
+    #nice  convert ${images} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${merge}append ${LOCATION}/background.jpg
+    convert ${images} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${merge}append ${LOCATION}/background.jpg
+    if [ "${WIN_MANAGER}" == "GNOME" ];then
+      gconftool-2 --set "/desktop/gnome/background/picture_options" --type string "spanned"
+      gconftool-2 -t string -s /desktop/gnome/background/picture_filename ${LOCATION}/background.jpg
+    elif [ "${WIN_MANAGER}" == "CINNAMON" ];then
+      gsettings set org.gnome.desktop.background picture-options 'spanned'
+      gsettings set org.gnome.desktop.background picture-uri file://"${LOCATION}/background.jpg"
+    else
+      # Catchall for fallthough (if XFCE manages to get here)
+      FOO=0
+    fi
   fi
 }
 
@@ -436,5 +442,5 @@ while true; do
 done
 
 # If we ever get to here, something has gone REALLY wrong.
-echo "Fatal error.  Exint now"; exit 1
+echo "Fatal error.  Exit now"; exit 1
 
