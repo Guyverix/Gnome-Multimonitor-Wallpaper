@@ -341,7 +341,7 @@ fi
 X_SESSION=`ps aux | grep X11/x[i]nit | grep -c xfce`
 if [ ${X_SESSION} -gt 0 ]; then
   WIN_MANAGER='XFCE'
-elif [ `ps aux | grep -c 'im-launch [g]nome-session-cinnamon'` -gt 0 ];then
+elif [ `ps aux | grep -c '[c]innamon-session'` -gt 0 ];then
   WIN_MANAGER='CINNAMON'
 else
   WIN_MANAGER='GNOME'
@@ -438,7 +438,6 @@ while true; do
     sleep ${TIMER}
     shopt -u nocasematch
   fi
-    
 done
 
 # If we ever get to here, something has gone REALLY wrong.
