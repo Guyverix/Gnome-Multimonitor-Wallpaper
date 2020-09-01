@@ -46,7 +46,9 @@ case $1 in
      while [ `ps aux | grep -c '[i]dentify'` -gt ${PROC} ]; do
        sleep 1
      done
-   done < <(find ${INDEX} -follow -type f -mtime -${REFRESH} \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
+   # Ignore lost+found find /home/chubbard/Wallpapers -name '*lost+found*' -prune -follow -o -type f -mtime +1
+   # find /home/chubbard/Wallpapers  -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;
+   done < <(find ${INDEX} -name '*lost+found*' -prune -follow -type f -mtime -${REFRESH} \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
    # Do not allow duplicate entries
    touch ${LOCATION}/images_full.tmp
    cat ${LOCATION}/images_full.lst | uniq  >> ${LOCATION}/images_full.tmp
@@ -61,7 +63,7 @@ case $1 in
    echo "This may take awhile depending on how many files there are..."
 
    echo "Finding all image files to verify"
-   find ${INDEX} -follow -type f \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \; >> /tmp/image_wip_$$.lst
+   find ${INDEX} -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \; >> /tmp/image_wip_$$.lst
    PROC=`cat /proc/cpuinfo | grep -c processor`
    for x in `cat /tmp/image_wip_$$.lst` ;do
      ${LOCATION}/identify.sh "${x}" &

@@ -129,9 +129,14 @@ create_full_span() {
   #echo create full span
   local fin_image=`echo ${FULL_SPAN} | awk '{print $1}' | sed "s/'//g"`
   #nice  convert ${fin_image} -gravity "${GRAVITY_SPAN}" -background ${BG_COLOR} -resize ${SPAN_SIZE_RT} ${LOCATION}/background.jpg
-  convert ${fin_image} -background ${BG_COLOR} -resize ${SPAN_SIZE_RT} ${LOCATION}/background.jpg
+#NORMAL  convert ${fin_image} -background ${BG_COLOR} -resize ${SPAN_SIZE_RT} ${LOCATION}/background.jpg
+  convert ${fin_image} -background ${BG_COLOR} -resize ${SPAN_SIZE_RT}\! ${LOCATION}/background.jpg #ignore aspect ratio using bang
   if [ "${WIN_MANAGER}" == "GNOME" ];then
     gconftool-2 --set "/desktop/gnome/background/picture_options" --type string "spanned"
+  elif [ "${WIN_MANAGER}" == "MATE" ];then
+    # useful options stretched spanned tiled
+    gsettings set org.mate.background picture-options 'spanned'
+    dconf write /org/mate/desktop/background/picture-filename "\"${LOCATION}/background.jpg\""
   else
     gsettings set org.gnome.desktop.background picture-options 'spanned'
   fi
@@ -220,6 +225,9 @@ create_merge() {
     if [ "${WIN_MANAGER}" == "GNOME" ];then
       gconftool-2 --set "/desktop/gnome/background/picture_options" --type string "spanned"
       gconftool-2 -t string -s /desktop/gnome/background/picture_filename ${LOCATION}/background.jpg
+    elif [ "${WIN_MANAGER}" == "MATE" ];then
+      gsettings set org.mate.background picture-options 'spanned'
+      dconf write /org/mate/desktop/background/picture-filename "\"${LOCATION}/background.jpg\""
     elif [ "${WIN_MANAGER}" == "CINNAMON" ];then
       gsettings set org.gnome.desktop.background picture-options 'spanned'
       gsettings set org.gnome.desktop.background picture-uri file://"${LOCATION}/background.jpg"
@@ -343,6 +351,8 @@ if [ ${X_SESSION} -gt 0 ]; then
   WIN_MANAGER='XFCE'
 elif [ `ps aux | grep -c '[c]innamon-session'` -gt 0 ];then
   WIN_MANAGER='CINNAMON'
+elif [ $(ps uax | grep -c '[m]ate-session') -gt 0 ];then
+  WIN_MANAGER='MATE'
 else
   WIN_MANAGER='GNOME'
 fi
