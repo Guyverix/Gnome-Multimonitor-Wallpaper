@@ -1,5 +1,12 @@
 Multi Monitor Desktop Wallpaper for Gnome / Cinnamon / XFCE
 
+Apparently this is now called "Live Wallpaper" out in the world :)  This script set still works
+however there will likely need to be some minor adjustments for later version of your desktop.
+In general, it should say when it cannot find something and you just need to install whatever
+is missing.  Other oddities can occur when you change the wallpaper and the desktop does not
+refresh it.  Have not seen it happen yet, but betting that someone somewhere may end up seeing
+this kind of behavior.
+
 guyverix@yahoo.com (2014)
 
 These scripts allow for spanning wallpapers in Gnome/XFCE/Cinnamon across monitors.  This was
