@@ -11,7 +11,7 @@
 #                 can get new indexing values when wallpapers are added.
 #
 #       OPTIONS:  none
-#  REQUIREMENTS:  Basic conf file. The imagemagick installation 
+#  REQUIREMENTS:  Basic conf file. The imagemagick installation
 #                 is manditory for this to work correctly.
 #          BUGS:  None known
 #         NOTES:  ---
@@ -46,8 +46,8 @@ case $1 in
      while [ `ps aux | grep -c '[i]dentify'` -gt ${PROC} ]; do
        sleep 1
      done
-   # Ignore lost+found find /home/chubbard/Wallpapers -name '*lost+found*' -prune -follow -o -type f -mtime +1
-   # find /home/chubbard/Wallpapers  -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;
+   # Ignore lost+found find /home/USER/Wallpapers -name '*lost+found*' -prune -follow -o -type f -mtime +1
+   # find /home/USER/Wallpapers  -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;
    done < <(find ${INDEX} -name '*lost+found*' -prune -follow -type f -mtime -${REFRESH} \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
    # Do not allow duplicate entries
    touch ${LOCATION}/images_full.tmp

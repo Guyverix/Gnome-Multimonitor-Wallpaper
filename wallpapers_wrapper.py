@@ -205,11 +205,12 @@ class Indicator():
 
 
     def setConfig(self,button):
+    # All editors MUST be GUI editors, not terminal ones.  No nano, vi, vim
         try:
             if os.path.exists('/opt/sublime_text/sublime_text'):
                 Popen(['/opt/sublime_text/sublime_text',os.environ['HOME']+'/.multi_wall/multi.cfg'])
-            elif which('nano') is not None:
-                Popen(['nano',os.environ['HOME']+'/.multi_wall/multi.cfg'])
+            elif which('gvim') is not None:
+                Popen(['gvim',os.environ['HOME']+'/.multi_wall/multi.cfg'])
             elif which('gedit') is not None:
                 Popen(['gedit',os.environ['HOME']+'/.multi_wall/multi.cfg'])
             elif which('mousepad') is not None:
@@ -218,8 +219,6 @@ class Indicator():
                 Popen(['kate',os.environ['HOME']+'/.multi_wall/multi.cfg'])
             elif which('kwrite') is not None:
                 Popen(['kwrite',os.environ['HOME']+'/.multi_wall/multi.cfg'])
-            elif which('vi') is not None:
-                Popen(['vi',os.environ['HOME']+'/.multi_wall/multi.cfg'])
         except CalledProcessError:                                  # Notify if we cannot edit multi.cfg for some reason
             Popen(['notify-send','Multiwall: Error could not open config file multi.cfg with any known editor'])
 
