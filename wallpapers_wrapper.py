@@ -29,16 +29,7 @@ APPINDICATOR_ID = 'Multiwall'
 class Indicator():
 
     global child_pid
-    global sysv
-    try:
-        sysv = int(Popen("pidof systemd >/dev/null 2>&1 && echo '0' || echo '1'", stdout=PIPE, shell=True).communicate()[0].strip().decode('UTF-8'))
-    except:
-        sysv = 2
-    if sysv:
-        multi_wall_status = Popen("export TERM=xterm-color;while :; do clear; pgrep -fx '/bin/bash " + os.environ['HOME']+ "/.multi_wall/multi_wallpapers.sh start' && echo 'active'; sleep 2; done", stdout=PIPE, shell=True)
-    else:
-        multi_wall_status = Popen("export TERM=xterm-color;while :; do clear; pgrep -fx '/bin/bash " + os.environ['HOME']+ "/.multi_wall/multi_wallpapers.sh start' && echo 'active'; sleep 2; done", stdout=PIPE, shell=True)
-#        multi_wall_status = Popen("export TERM=xterm-color;while :; do clear; systemctl is-active wallpaper; sleep 2; done", stdout=PIPE, shell=True)
+    multi_wall_status = Popen("export TERM=xterm-color;while :; do clear; pgrep -fx '/bin/bash " + os.environ['HOME']+ "/.multi_wall/multi_wallpapers.sh start' && echo 'active'; sleep 2; done", stdout=PIPE, shell=True)
     child_pid = multi_wall_status.pid
 
     homedir = os.path.expanduser("~")
@@ -50,23 +41,26 @@ class Indicator():
     chkautostart_id = 0
     autostart_bool = False
     menu = Gtk.Menu()
-    checkbox_autostart = Gtk.CheckMenuItem(label='Autostart')
+
     restart = Gtk.MenuItem(label='Restart')
     stop = Gtk.MenuItem(label='Stop')
+    instant = Gtk.MenuItem(label='Single Change')
+    new = Gtk.MenuItem(label='Rebuild image index')
+    update = Gtk.MenuItem(label='Update image index')
 
     edit = Gtk.MenuItem(label='Customize')
     edit_submenu = Gtk.Menu()
     edit.set_submenu(edit_submenu)
 
-    button_config = Gtk.MenuItem(label='Multi-Wallpaper Config (multi.cfg)')
-    service = Gtk.MenuItem(label='Multi monitor Service')
+    button_config = Gtk.MenuItem(label='Edit Config file')
     about = Gtk.MenuItem(label='About')
 
     helpm = Gtk.MenuItem(label='Help')
     help_submenu = Gtk.Menu()
     helpm.set_submenu(help_submenu)
 
-    systray = Gtk.CheckMenuItem(label='Tray Enabled')
+    support = Gtk.MenuItem(label='Support')
+    checkbox_autostart = Gtk.CheckMenuItem(label='Autostart')
 
     global restartsvc
     restartsvc = False
@@ -74,24 +68,16 @@ class Indicator():
     last_status = ''
 
     def __init__(self):
-        global sysv
-        try:
-            sysv = int(Popen("pidof systemd >/dev/null 2>&1 && echo '0' || echo '1'", stdout=PIPE, shell=True).communicate()[0].strip().decode('UTF-8'))
-        except:
-            sysv = 1
-        if sysv:
-            res = Popen(['pgrep', '-fx', '/bin/bash ' + os.environ['HOME']+ '/.multi_wall/multi_wallpapers.sh start'])
-        else:
-            res = Popen(['pgrep', '-fx', '/bin/bash ' + os.environ['HOME']+ '/.multi_wall/multi_wallpapers.sh start'])
-#            res = Popen(['sudo', 'systemctl','is-active','--quiet','wallpaper'])
+        # Initialize our watchdog to see if the daemon is running
+        res = Popen(['pgrep', '-fx', '/bin/bash ' + os.environ['HOME']+ '/.multi_wall/multi_wallpapers.sh start'])
         res.wait()
 
         if res.returncode == 0:
             self.last_status = 'active'
-            self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, os.environ['HOME']+'/.multi_wall/kinto-invert.svg', appindicator.IndicatorCategory.SYSTEM_SERVICES)
+            self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, os.environ['HOME']+'/.multi_wall/images/multi-happy.png', appindicator.IndicatorCategory.SYSTEM_SERVICES)
         else:
             self.last_status = 'inactive'
-            self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, os.environ['HOME']+'/.multi_wall/kinto.svg', appindicator.IndicatorCategory.SYSTEM_SERVICES)
+            self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, os.environ['HOME']+'/.multi_wall/images/multi-sleep.png', appindicator.IndicatorCategory.SYSTEM_SERVICES)
 
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.build_menu(res))
@@ -100,6 +86,7 @@ class Indicator():
         GLib.timeout_add(2000, self.update_terminal)
 
     def build_menu(self,res):
+        # Pull from our config file if we are running the initial startup or sitting idle
         autostart_line = str(Popen("grep '^AUTOSTART' " + os.environ['HOME']+'/.multi_wall/multi.cfg', stdout=PIPE, shell=True).communicate()[0].strip().decode('UTF-8'))
 
         if autostart_line == "AUTOSTART=true":
@@ -108,7 +95,8 @@ class Indicator():
             autostart_bool = False
 
         if autostart_bool:
-            # Popen(['sudo', 'systemctl','restart','multiwall?'])
+            # If True, start daemon
+            Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'start'])
             self.checkbox_autostart.set_active(True)
             self.chkautostart_id = self.checkbox_autostart.connect('activate',self.setAutostart,False)
         else:
@@ -120,27 +108,25 @@ class Indicator():
         self.stop.connect('activate',self.runStop)
         self.menu.append(self.stop)
 
+        self.instant.connect('activate',self.runInstant)
+        self.menu.append(self.instant)
+
+        self.new.connect('activate',self.runNew)
+        self.menu.append(self.new)
+
+        self.update.connect('activate',self.runUpdate)
+        self.menu.append(self.update)
+
         self.button_config.connect('activate',self.setConfig)
         self.edit_submenu.append(self.button_config)
-        self.edit_submenu.append(self.service)
         self.edit_submenu.append(self.checkbox_autostart)
 
-
-        if os.path.exists(os.environ['HOME']+'/.multi_wall/multi_wall.desktop'):
-            self.systray.set_active(True)
-            self.systray.signal_id = self.systray.connect('activate',self.checkTray,False)
-        else:
-            self.systray.signal_id = self.systray.connect('activate',self.checkTray,True)
-
-        self.edit_submenu.append(self.systray)
         self.menu.append(self.edit)
 
-
-
-
-# At the end
         self.about.connect('activate',self.runAbout)
         self.help_submenu.append(self.about)
+        self.support.connect('activate',self.openSupport)
+        self.help_submenu.append(self.support)
         self.menu.append(self.helpm)
 
         item_quit = Gtk.MenuItem(label='Close')
@@ -152,7 +138,7 @@ class Indicator():
 
 
     def checkTray(self,button,tray_bool):
-        # path.exists('.autostart/wallpapers_wrapper.py')
+        # make very sure that the .autostart directory exists, as this does not make the directory
         if tray_bool:
             Popen(['cp',os.environ['HOME']+'/.multi_wall/wallpapers_wrapper.py',os.environ['HOME']+'/.multi_wall/.autostart/wallpapers_wrapper.py'])
             self.systray.disconnect(self.systray.signal_id)
@@ -166,56 +152,56 @@ class Indicator():
             self.systray.signal_id = self.systray.connect('activate',self.checkTray,True)
         return
 
-
-
     def runRestart(self,button):
-        global sysv
         try:
-            if sysv:
-                stop = Popen(['sudo', '-E','/etc/init.d/multi_wall','stop'])
-            else:
-#                stop = Popen(['sudo', 'systemctl','stop','multi_wall'])
-                stop = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
+            stop = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
             stop.wait()
             time.sleep(1)
-#            res = Popen(['pgrep', '-lf', 'bin/bash.*.multi_wallpaper.sh'])
             res = Popen(['pgrep', '-fx', '/bin/bash ' + os.environ['HOME']+'/.multi_wall/multi_wallpapers.sh start'])
             res.wait()
-
             if res.returncode == 0:
-                # Popen(['notify-send','Kinto: Ending Debug'])
-#                pkillxkey = Popen(['sudo', 'pkill','-f','wallpapers'])
                 pkillxkey = Popen(["ps aux | grep '[m]ulti_wallpapers.sh start' | awk '{print $2}' | xargs kill -9"])
                 pkillxkey.wait()
-            if sysv:
-                Popen(['sudo', '-E','/etc/init.d/multi_wall','start'])
-            else:
-#                Popen(['sudo', 'systemctl','start','multi_wall'])
-                Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'start'])
+            Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'start'])
         except:
             Popen(['notify-send','Multiwallpaper: Error restarting Multi-Wallpapers!'])
 
-    def runStop(self,button):
-        global sysv
+    def runInstant(self,button):
         try:
-            if sysv:
-                Popen(['notify-send','Hitting sysv stop command'])
-                stop = Popen(['sudo', '-E','/etc/init.d/multi_wall','stop'])
-#                stop = Popen(['sudo', '-E', os.environ['HOME']+'/.multi_wall/wallpapers stop'])
-            else:
-                stop = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
+          instant = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'instant'])
+          instant.wait()
+        except:
+          Popen(['notify-send','Multiwallpaper: Error running instant single wallpaper change'])
+
+    def runNew(self,button):
+        try:
+          Popen(['notify-send','Multiwallpaper: Reindexing ALL images this will take some time'])
+          new = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'new'])
+          new.wait()
+        except:
+          Popen(['notify-send','Multiwallpaper: Reindexing ALL images failed'])
+
+    def runUpdate(self,button):
+        try:
+          Popen(['notify-send','Multiwallpaper: Attempting to find newer images'])
+          update = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'update'])
+          update.wait()
+        except:
+          Popen(['notify-send','Multiwallpaper: Searching for updated images failed'])
+
+    def runStop(self,button):
+        try:
+            stop = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
             stop.wait()
             time.sleep(1)
             res = Popen(['pgrep', '-fx', '/bin/bash ' + os.environ['HOME']+'/.multi_wall/multi_wallpapers.sh start'])
             res.wait()
-
-            #Popen(['notify-send','DEBUG: return code for pgrep ' + str(res.returncode)])
             if res.returncode == 0:
-                Popen(['notify-send','Multiwall: Ending Debug killing process'])
+                Popen(['notify-send','Multiwall: Stop command failed.  Killing with napalm next'])
                 pkillxkey = Popen(["ps aux | grep '[m]ulti_wallpapers.sh start' | awk '{print $2}' | xargs kill -9"])
                 pkillxkey.wait()
         except:
-            Popen(['notify-send','Multiwallpaper: Error stopping Multi-Wallpapers! find the damn exception '])
+            Popen(['notify-send','Multiwallpaper: Error stopping Multi-Wallpapers! find the damn exception that pgrep missed'])
 
 
     def setConfig(self,button):
@@ -232,8 +218,10 @@ class Indicator():
                 Popen(['kate',os.environ['HOME']+'/.multi_wall/multi.cfg'])
             elif which('kwrite') is not None:
                 Popen(['kwrite',os.environ['HOME']+'/.multi_wall/multi.cfg'])
-        except CalledProcessError:                                  # Notify user about error on running restart commands.
-            Popen(['notify-send','Multiwall: Error could not open config file multi.cfg!'])
+            elif which('vi') is not None:
+                Popen(['vi',os.environ['HOME']+'/.multi_wall/multi.cfg'])
+        except CalledProcessError:                                  # Notify if we cannot edit multi.cfg for some reason
+            Popen(['notify-send','Multiwall: Error could not open config file multi.cfg with any known editor'])
 
 
     def setAutostart(self,button,autostart):
@@ -248,7 +236,6 @@ class Indicator():
                 self.checkbox_autostart.set_active(True)
                 self.checkbox_autostart.disconnect(self.chkautostart_id)
                 self.chkautostart_id = self.checkbox_autostart.connect('activate',self.setAutostart,False)
-
         except CalledProcessError:
             Popen(['notify-send','Multiwallpaper: Error setting autostart!'])
 
@@ -256,11 +243,11 @@ class Indicator():
     def update_terminal(self):
         status = self.non_block_read().strip()
         nowts = int(time.time())
-        kinto_icon_desc = "Kinto"
-        if (nowts - self.unixts) > 5 and (status=='active' and self.indicator.get_icon() != os.environ['HOME']+'/.multi_wall/kinto-invert.svg'):
-            self.indicator.set_icon_full(os.environ['HOME']+'/.multi_wall/kinto-invert.svg', kinto_icon_desc)
-        elif (nowts - self.unixts) > 5 and (status == 'inactive' and self.indicator.get_icon() != os.environ['HOME']+'/.multi_wall/kinto.svg'):
-            self.indicator.set_icon_full(os.environ['HOME']+'/.multi_wall/kinto.svg', kinto_icon_desc)
+        multiwall_icon_desc = "Multiwall"
+        if (nowts - self.unixts) > 5 and (status=='active' and self.indicator.get_icon() != os.environ['HOME']+'/.multi_wall/images/multi-happy.png'):
+            self.indicator.set_icon_full(os.environ['HOME']+'/.multi_wall/images/multi-happy.png', multiwall_icon_desc)
+        elif (nowts - self.unixts) > 5 and (status == 'inactive' and self.indicator.get_icon() != os.environ['HOME']+'/.multi_wall/images/multi-sleep.png'):
+            self.indicator.set_icon_full(os.environ['HOME']+'/.multi_wall/images/multi-sleep.png', multiwall_icon_desc)
         self.last_status = status
         return self.multi_wall_status.poll() is None
 
@@ -272,7 +259,6 @@ class Indicator():
         res = Popen(query, stdout=PIPE, stderr=None, shell=True)
         res.wait()
         return res.communicate()[0].strip().decode('UTF-8')
-
 
     def non_block_read(self):
         ''' even in a thread, a normal read with block until the buffer is full '''
@@ -297,39 +283,15 @@ class Indicator():
             stats = "inactive"
         return stats
 
-
-    def setService(self,button):
-        try:
-            if os.path.exists('/opt/sublime_text/sublime_text'):
-                Popen(['/opt/sublime_text/sublime_text','/lib/systemd/system/multi_wall.service'])
-            elif which('gedit') is not None:
-                Popen(['gedit','/lib/systemd/system/multi_wall.service'])
-            elif which('mousepad') is not None:
-                Popen(['mousepad','/lib/systemd/system/multi_wall.service'])
-            elif which('kate') is not None:
-                Popen(['kate','/lib/systemd/system/multi_wall.service'])
-            elif which('kwrite') is not None:
-                Popen(['kwrite','/lib/systemd/system/multi_wall.service'])
-        except CalledProcessError:                                  # Notify user about error on running restart commands.
-            Popen(['notify-send','Multiwall: Error could not open service config file!'])
-
-
     def on_delete_event(event, self, widget):
         global restartsvc
         if restartsvc == True:
             try:
-                if sysv:
-                    restartcmd = ([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
-                    restartcmd2 = ([os.environ['HOME']+'/.multi_wall/wallpapers', 'start'])
-#                    restartcmd = ['sudo', '-E','/etc/init.d/kinto','restart']
-                else:
-                    restartcmd = ([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
-                    restartcmd2 = ([os.environ['HOME']+'/.multi_wall/wallpapers', 'start'])
-#                    restartcmd = ['sudo', 'systemctl','restart','xkeysnail']
-                Popen(restartcmd)
-                Popen(restartcmd2)
-
-                restartsvc = False
+               restartcmd = ([os.environ['HOME']+'/.multi_wall/wallpapers', 'stop'])
+               restartcmd2 = ([os.environ['HOME']+'/.multi_wall/wallpapers', 'start'])
+               Popen(restartcmd)
+               Popen(restartcmd2)
+               restartsvc = False
             except CalledProcessError:
                 Popen(['notify-send','Multiwall: Error restarting wallpapers after setting values!'])
         self.hide()
@@ -337,11 +299,10 @@ class Indicator():
         return True
 
 
-
     def runAbout(self,button):
         win = Gtk.Window()
 
-        path = os.environ['HOME']+'/.multi_wall/kinto-color.svg'
+        path = os.environ['HOME']+'/.multi_wall/images/multi-color-48.png'
         width = -1
         height = 128
         preserve_aspect_ratio = True
@@ -372,9 +333,9 @@ class Indicator():
         vbox = Gtk.VBox()
 
         if theme == "dark":
-            path = os.environ['HOME']+'/.multi_wall/kinto-invert.svg'
+            path = os.environ['HOME']+'/.multi_wall/images/multi-color-48.png'
         else:
-            path = os.environ['HOME']+'/.multi_wall/kinto-color.svg'
+            path = os.environ['HOME']+'/.multi_wall/images/multi-color-48.png'
         width = -1
         height = 128
         preserve_aspect_ratio = True
