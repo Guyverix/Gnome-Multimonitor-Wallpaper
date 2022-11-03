@@ -39,6 +39,32 @@ Randomize - Randomize the index of all the wallpapers
 EOF
 }
 
+#===  FUNCTION  ================================================================
+#          NAME:  logger
+#   DESCRIPTION:  create log ilfe
+#    PARAMETERS:  severity, message
+#       RETURNS:  NONE
+#===============================================================================
+logger() {
+local SEV=$1
+local STR=$2
+if [[ -z ${STR} ]]; then
+  STR="No details given"
+fi
+# If the file does not exist, simply touch it
+if [[ ! -e ${OUT_FILE} ]]; then
+  touch ${OUT_FILE}
+fi
+
+# Make sure our output is uniform.  Why look sloppy?
+local SEV=$(echo "${SEV}" | tr [:lower:] [:upper:])
+
+local LDATE=$(date "+%F %H:%M:%S")
+
+# Set our output now into our "logfile"
+echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUTFILE} ;;
+
+}
 
 #===  FUNCTION  ================================================================
 #          NAME:  full_spanner
@@ -329,6 +355,10 @@ fi
 #  Do basic validations and then get arguments
 #===============================================================================
 LOCATION=/home/${USER}/.multi_wall
+
+# Logging basics
+FIL=$(echo "$0" | awk -F '/' '{print $NF}' | sed 's/\.sh/\.log/')
+OUT_FILE=${LOCATION}/${FIL} ; touch ${OUT_FILE}
 
 if [ -e ${LOCATION}/multi.cfg ];then
   . ${LOCATION}/multi.cfg
