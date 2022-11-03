@@ -1,5 +1,5 @@
 backup*
 *.lst
-background.jpg
 *.jpg
 *.swp
+*.log
