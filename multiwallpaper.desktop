@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Multi Wallpaper
+Name=Multi_Wallpaper
 GenericName=Multiwallpaper
 Comment=Multi monitor wallpaper changer
-Exec=/bin/bash -c "/home/chubbard/.config/multi_wall/wallpapers_wrapper.py"
+Exec=/bin/bash -c "/home/USERID/.multi_wall/wallpapers_wrapper.py"
 Terminal=false
 Type=Application
 X-GNOME-Autostart-enabled=true
