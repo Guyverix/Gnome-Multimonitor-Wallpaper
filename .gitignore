@@ -3,3 +3,5 @@ backup*
 *.jpg
 *.swp
 *.log
+/*.pid
+
