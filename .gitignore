@@ -1,7 +1,7 @@
 backup*
-*.lst
-*.jpg
-*.swp
-*.log
+/*.lst
+/*.jpg
+/*.swp
+/*.log
 /*.pid
 
