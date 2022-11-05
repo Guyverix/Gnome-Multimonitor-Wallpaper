@@ -32,9 +32,11 @@ while this works well for Gnome, XFCE currently only fully supports a single row
 monitors that are on the same "X" screen.
 
 Options:
+Help      - Show this help screen
 New       - Reindex all of the wallpaper images
 Update    - Look for new wallpapers in the storage directory
 Randomize - Randomize the index of all the wallpapers
+instant   - Do only a single change and exit
 *         - Any other arg will show this screen
 EOF
 }
@@ -62,7 +64,7 @@ local SEV=$(echo "${SEV}" | tr [:lower:] [:upper:])
 local LDATE=$(date "+%F %H:%M:%S")
 
 # Set our output now into our "logfile"
-echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUTFILE} ;;
+echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUTFILE}
 
 }
 
@@ -393,7 +395,7 @@ case ${1} in
   N|Ne*)  nice nohup ${LOCATION}/multi_update.sh New &> /dev/null; exit 0    ;;
   U|Upd*) nice nohup ${LOCATION}/multi_update.sh Update &> /dev/null; exit 0    ;;
   R|Ran*) nohup ${LOCATION}/multi_update.sh Random &> /dev/null; exit 0    ;;
-  H|Hel*) usage;  exit 1    ;;
+  -h|h|H|Hel*) usage;  exit 1    ;;
   *)      # Allow anyhthing, as Instant is not defined here (yet)    ;;
 esac
 shopt -u nocasematch

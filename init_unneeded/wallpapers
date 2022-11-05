@@ -1,0 +1,157 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          multi_wallpapers.sh
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Example initscript
+# Description:       This file based on the skeleton for init.d
+#                    placed in /etc/init.d.
+### END INIT INFO
+
+# Author: Christopher Hubbard <guyverix@yahoo.com>
+#
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Multi Wallpaper Changer"
+NAME=multi_wallpapers.sh
+DAEMON=/home/${USER}/.multi_wall/$NAME
+PIDFILE=/home/${USER}/.multi_wall/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Exit if the package is not installed
+#[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+#. support/vars.sh
+
+VERBOSE=yes
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+#. support/init-functions
+
+#
+# Function that starts the daemon/service
+#
+
+do_instant()
+{
+$DAEMON instant || return 1
+}
+
+do_new()
+{
+  $DAEMON new || return 1
+}
+
+do_update()
+{
+  $DAEMON update || return 1
+}
+
+do_random()
+{
+  $DAEMON random || return 1
+}
+
+do_start()
+{
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+#	start-stop-daemon --start --pidfile $PIDFILE --background --exec /bin/bash $DAEMON --test  || return 1
+	start-stop-daemon --start --background --nicelevel 14 -m --pidfile $PIDFILE --exec /bin/bash $DAEMON start || return 2
+#	start-stop-daemon --start $DAEMON --background --nicelevel 19 -m --pidfile $PIDFILE --startas $DAEMON || return 2
+
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+        cat $PIDFILE 2> /dev/null | xargs kill -9 2> /dev/null || RETVAL=1
+        RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	# Many daemons don't delete their pidfiles when they exit.
+	rm -f $PIDFILE
+	return "$RETVAL"
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  status)
+       status_of_proc -p "$PIDFILE" "$DAEMON" "$NAME" && exit 0 || return=$?
+       if [ $return -eq 4 ];then
+       printf "appears daemon is not running"; log_end_msg 0
+       
+       exit 0
+       fi
+       ;;
+  instant)
+ 	log_daemon_msg "Instant change request to $DESC" "Starting.."
+        do_instant
+ 	log_daemon_msg "Instant change request to $DESC" "Done.."
+	case "$?" in
+    	  0) log_end_msg 0 ;;
+	  1) log_end_msg 1 ;; # Old process is still running
+	  *) log_end_msg 1 ;; # Failed to start
+	esac
+        ;;
+  new)
+      log_daemon_msg "Requesting index creation" "Starting.."
+      do_new
+      log_daemon_msg "Request" "Complete.."
+      log_end_msg 0
+      ;;
+  update)
+      log_daemon_msg "Requesting index update" "Starting.."
+      do_update
+      log_daemon_msg "Request" "Complete.."
+      log_end_msg 0
+      ;;
+  random)
+      log_daemon_msg "Randomizing index list" "Starting.."
+      do_random
+      log_daemon_msg "Request" "Complete.."
+      log_end_msg 0
+      ;;
+
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|status|instant|new|update|random}" >&2
+	exit 3
+	;;
+esac
+
+:
+
