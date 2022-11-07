@@ -37,6 +37,8 @@ Installation
 1. clone the repository and then run the setup script.  
   i. It will create a .multi_wall directory in your HOME path and set the system tray, as well as add a menu item.
 2. Start the Multi_Wallpaper from the menu, and go into Customize >> Edit Config File.
+  i. Set your INDEX value to where your wallpapers reside on your hard drive.
+  ii.  You CAN set as "dir1 dir2 dir3" if they are spread out on your system.
   i. From there edit the R1_[#] values with what your monitor resolutions are.  Note that this starts at zero, and not one for the number of monitors.
 3. Set your SPAN_SIZE_R1 to the sum of all X values so we know how wide your monitor "set" is.
   i. set your SPAN_SIZE_RT to be the same value as SPAN_SIZE_R1 if you only have a single row of monitors.  If there are
@@ -58,34 +60,36 @@ user is not interested in doing a complete rescan of all the image files.
 or just grab random images out of the complete list of images.
 10. AUTOSTART is where the user can define if they want changing wallpapers on startup of the system tray script, or simply
 have the system be idle so the user can enable at their leasure.
+11. The other options have a basic description in the multi.cfg file and should be mostly self explanitory
+
 
 Scripts Included
 ----------------
 
 - multi_update.sh
-* Changes done to the images.lst file are controlled by this script.
-* Args it takes new, update and randomize
+  * Changes done to the images.lst file are controlled by this script.
+  * Args it takes new, update and randomize
 
 - multi_wallpapers.sh
-* Main daemon that communicates with the support scripts and runs the daemon process itself.
+  * Main daemon that communicates with the support scripts and runs the daemon process itself.
 
 - wallpapers
-* Primary script used to control the other scripts in a simple way.
-* In normal operation this is the script that is called to do "something" within the application
+  * Primary script used to control the other scripts in a simple way.
+  * In normal operation this is the script that is called to do "something" within the application
 
 - identify.sh
-* This is used to find the size of the wallpapers and add the information into the index file.  This keeps the speed up when requesting changes as it does not need to calculate the wallpapers every time it is run.
+  * This is used to find the size of the wallpapers and add the information into the index file.  This keeps the speed up when requesting changes as it does not need to calculate the wallpapers every time it is run.
 
 - setup.sh
-* This is a bare-bones installer.  It will install to /home/USER/.multi_wall, as well as adding the .desktop files to enable the system tray and menu items to the system.
-* Installation does NOT need sudo and gets grouchy if you do use it. :P
+  * This is a bare-bones installer.  It will install to /home/USER/.multi_wall, as well as adding the .desktop files to enable the system tray and menu items to the system.
+  * Installation does NOT need sudo and gets grouchy if you do use it. :P
 
 - wallpapers_wrapper.py
-* This is the actual script that runs the applet in the system tray.  This wrapper calls the wallpapers script with the commands you give it from the GUI
-* Important note about the applet script.  I am not a (real) developer.  I took the Kinto python script from this project ![ListForks](https://github.com/rbreaves/kinto) and used it as a template on how to make a usable applet.  Thankfully his work was nice and straightforward or I never would have figured out how to make a reliable system.  If you want to make a nice and easy applet yourself follow what he has done for Kinto as it just works.
+  * This is the actual script that runs the applet in the system tray.  This wrapper calls the wallpapers script with the commands you give it from the GUI
+  * Important note about the applet script.  I am not a (real) developer.  I took the Kinto python script from this project ![Python Source](https://github.com/rbreaves/kinto) and used it as a template on how to make a usable applet.  Thankfully his work was nice and straightforward or I never would have figured out how to make a reliable system.  If you want to make a nice and easy applet yourself follow what he has done for Kinto as it just works.
 
 - multi.cfg
-* The configuration file necessary to make the wallpapers look good
+  * The configuration file necessary to make the wallpapers look good
 
 
 
