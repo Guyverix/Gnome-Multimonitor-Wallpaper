@@ -50,9 +50,22 @@ else
 fi
 sleep .5
 
-# Here is where we add to the desktop autorun (if we can figure out how)
-cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.config/autostart/multiwallpaper.desktop
-echo "Application is set to start on login"
+# Here is where we add to the desktop autorun ABILITY.  Do not turn on by default, thats just rude.
+if [[ ! -e ~/.local/share/applications/multiwall.desktop ]]; then
+  cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.local/share/applications/multiwall.desktop
+  echo "Application has been added to the Menu as Multi_Wallpaper"
+fi
+
+if [[ ! -e ~/.config/autostart/multiwallpaper.desktop ]] ; then
+  cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.config/autostart/multiwallpaper.desktop
+  echo "Application is set to start on login but not change wallpapers"
+fi
+
+if [[ $(grep -c multi_wall ~/.cinnamon/backgrounds/user-folders.lst) -eq 0 ]]; then
+  echo "/home/${USER}/.multi_wall" >> ~/.cinnamon/backgrounds/user-folders.lst
+  echo "Added .multi_wall to your background wallpapers path"
+  echo "After indexing and running either start, or instant choose this path for your background.jpg file"
+fi
 
 echo "Setup complete"; exit 0
 
