@@ -19,7 +19,7 @@ fi
 
 USERID=`got_root`
 if [ "${USERID}" == "root" ];then
-  echo "sudo is not required, this should be run as yourself (so we can find your home directory)"
+  echo "sudo is required only when running mate, this should be run as yourself (so we can find your home directory)"
   exit 1
 else
   echo "Confirmed we are not running as root user... Continuing"; sleep .5
@@ -50,23 +50,45 @@ else
 fi
 sleep .5
 
-# Here is where we add to the desktop autorun ABILITY.  Do not turn on by default, thats just rude.
-if [[ ! -e ~/.local/share/applications/multiwall.desktop ]]; then
-  cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.local/share/applications/multiwall.desktop
-  echo "Application has been added to the Menu as Multi_Wallpaper"
+# If cinnamon is installed, get the pathing in there
+if [[ -e ~/.cinnamon ]]; then
+  echo "A Cinnamon config directory was found."
+  # Here is where we add to the desktop autorun ABILITY.  Do not turn on by default, thats just rude.
+  if [[ ! -e ~/.local/share/applications/multiwall.desktop ]]; then
+    cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.local/share/applications/multiwall.desktop
+    echo "Application has been added to the Menu as Multi_Wallpaper"
+  fi
+
+  if [[ $(grep -c multi_wall ~/.cinnamon/backgrounds/user-folders.lst) -eq 0 ]]; then
+    echo "/home/${USER}/.multi_wall" >> ~/.cinnamon/backgrounds/user-folders.lst
+    echo "Added .multi_wall to your background wallpapers path"
+    echo "After indexing and running either start, or instant choose this path for your background.jpg file"
+  fi
 fi
 
+# Check if Gnome - MATE installed via the gsettings existing or not
+if [[ $(which gsettings) ]]; then
+  echo "The gsettings binary was found.  Updating gnome - mate settings"
+  gsettings set org.gnome.desktop.background picture-uri "file:///home/${USER}/.multi_wall/background.jpg"
+fi
+
+# cinnamon, mate, and XFCE all use this same spec
+# https://askubuntu.com/questions/63407/where-are-startup-commands-stored
+if [[ ! -e ~/.config/autostart ]]; then
+  mkdir ~/.config/autostart
+fi
 if [[ ! -e ~/.config/autostart/multiwallpaper.desktop ]] ; then
   cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.config/autostart/multiwallpaper.desktop
   echo "Application is set to start on login but not change wallpapers"
 fi
 
-if [[ $(grep -c multi_wall ~/.cinnamon/backgrounds/user-folders.lst) -eq 0 ]]; then
-  echo "/home/${USER}/.multi_wall" >> ~/.cinnamon/backgrounds/user-folders.lst
-  echo "Added .multi_wall to your background wallpapers path"
-  echo "After indexing and running either start, or instant choose this path for your background.jpg file"
+if [[ ! $(which identify) ]]; then
+  echo "For courtesey, this script does not install random packages"
+  echo "Please install ImageMagick via: sudo apt install imagemagick"
 fi
 
+# Check if Generic Gnome installed
+
+# Check if XFCE installed
+
 echo "Setup complete"; exit 0
-
-
