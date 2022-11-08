@@ -25,12 +25,17 @@ else
   echo "Confirmed we are not running as root user... Continuing"; sleep .5
 fi
 
-if [[ ! -e "~/.multi_wall" ]];then
+if [[ ! -d ~/.multi_wall ]];then
   mkdir ~/.multi_wall 2>&1 >/dev/null
   cp -R * ~/.multi_wall/
 else
   echo "The .multi_wall directory already exists"
   echo "Not taking the chance of clobbering any customizing done"
+  echo "Only will copy minimal files necessary"
+  cp *.sh ~/.multi_wall/
+  cp *.py ~/.multi_wall/
+  cp wallpapers ~/.multi_wall/
+  cp version ~/.multi_wall/
 fi
 
 # Setup should not need a lot of brains, and we do NOT want to
@@ -45,8 +50,6 @@ if [[ ! -e /home/${USER}/.multi_wall/images.lst ]];then
   echo "or on github."
 else
   echo "The images.lst file exists.  This is likely an update."
-  echo "The file copy needs to be done manually so we do not clobber"
-  echo "files such as images.lst and multi.cfg"
 fi
 sleep .5
 
