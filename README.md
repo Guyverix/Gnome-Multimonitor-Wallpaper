@@ -34,33 +34,33 @@ occur, or to change from sequential to random styles.
 Installation
 ------------
 
-1. clone the repository and then run the setup script.  
-  i. It will create a .multi_wall directory in your HOME path and set the system tray, as well as add a menu item.
-2. Start the Multi_Wallpaper from the menu, and go into Customize >> Edit Config File.
-  i. Set your INDEX value to where your wallpapers reside on your hard drive.
-  ii.  You CAN set as "dir1 dir2 dir3" if they are spread out on your system.
-  i. From there edit the R1_[#] values with what your monitor resolutions are.  Note that this starts at zero, and not one for the number of monitors.
-3. Set your SPAN_SIZE_R1 to the sum of all X values so we know how wide your monitor "set" is.
-  i. set your SPAN_SIZE_RT to be the same value as SPAN_SIZE_R1 if you only have a single row of monitors.  If there are
+- clone the repository and then run the setup script.  
+  - It will create a .multi_wall directory in your HOME path and set the system tray, as well as add a menu item.
+- Start the Multi_Wallpaper from the menu, and go into Customize >> Edit Config File.
+  - Set your INDEX value to where your wallpapers reside on your hard drive.
+    - You CAN set as "dir1 dir2 dir3" if they are spread out on your system.
+  - From there edit the R1_[#] values with what your monitor resolutions are.  Note that this starts at zero, and not one for the number of monitors.
+- Set your SPAN_SIZE_R1 to the sum of all X values so we know how wide your monitor "set" is.
+  - set your SPAN_SIZE_RT to be the same value as SPAN_SIZE_R1 if you only have a single row of monitors.  If there are
 two rows, then add in the Y values between the two rows and set that here.  This may need some tweaks to get the span across
 rows to look nice, due to different resolutions making things look a bit different.  The script will attempt to clip in the event
 of a mismatch in resoltuions so the result should look ok overall.
-4. Setting the R1_SIZE_SPAN_X/Y Values is so we know how big the user wants something to be before it considers the
+- Setting the R1_SIZE_SPAN_X/Y Values is so we know how big the user wants something to be before it considers the
 wallpaper a "spanning" wallpaper.
-5. The same logic follows for the RT_SIZE_SPAN_X/Y values.
-6. The GRAVITY values are how we are going to center the wallpapers.  
-  i. This is used, as we are not generally going to alter the aspect ratio of the wallpaper as they can look horribly deformed if the change is too great.  So this
+- The same logic follows for the RT_SIZE_SPAN_X/Y values.
+- The GRAVITY values are how we are going to center the wallpapers.  
+  - This is used, as we are not generally going to alter the aspect ratio of the wallpaper as they can look horribly deformed if the change is too great.  So this
 system will simply change the size while keeping the ratio intact.  Gravity is where in the canvas the image is placed.
-7. Then the BG_COLOR is used for all areas that are not covered up by the image.
-  i. You can use different colors, or HEX codes with the ImageMagick convert utility, so you can do interesting affects.
-8. The REFRESH value is for when you are updating your image list.  
-  i. It tells the daemon to look this many days back in time and add all the images that are found into your index.  This is used when there are a large number of wallpapers and the
+- Then the BG_COLOR is used for all areas that are not covered up by the image.
+  - You can use different colors, or HEX codes with the ImageMagick convert utility, so you can do interesting affects.
+- The REFRESH value is for when you are updating your image list.  
+  - It tells the daemon to look this many days back in time and add all the images that are found into your index.  This is used when there are a large number of wallpapers and the
 user is not interested in doing a complete rescan of all the image files.
-9. SEARCH is used to configure the auto change and instant systems to either pull the images sequentially from the list
+- SEARCH is used to configure the auto change and instant systems to either pull the images sequentially from the list
 or just grab random images out of the complete list of images.
-10. AUTOSTART is where the user can define if they want changing wallpapers on startup of the system tray script, or simply
+- AUTOSTART is where the user can define if they want changing wallpapers on startup of the system tray script, or simply
 have the system be idle so the user can enable at their leasure.
-11. The other options have a basic description in the multi.cfg file and should be mostly self explanitory
+- The other options have a basic description in the multi.cfg file and should be mostly self explanitory
 
 
 Scripts Included
