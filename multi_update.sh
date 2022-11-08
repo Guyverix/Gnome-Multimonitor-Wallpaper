@@ -24,10 +24,38 @@
 
 LOCATION=/home/${USER}/.multi_wall
 
+#===  FUNCTION  ================================================================
+#          NAME:  logger
+#   DESCRIPTION:  create log ilfe
+#    PARAMETERS:  severity, message
+#       RETURNS:  NONE
+#===============================================================================
+logger() {
+OUT_FILE="${LOCATION}/multi_wallpapers.log"
+
+local SEV=$1
+local STR=$2
+if [[ -z ${STR} ]]; then
+  STR="No details given"
+fi
+# If the file does not exist, simply touch it
+if [[ ! -e ${OUT_FILE} ]]; then
+  touch ${OUT_FILE}
+fi
+
+# Make sure our output is uniform.  Why look sloppy?
+local SEV=$(echo "${SEV}" | tr [:lower:] [:upper:])
+local LDATE=$(date "+%F %H:%M:%S")
+# Set our output now into our "logfile"
+echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUT_FILE}
+
+}
+
 # Make sure we have a valid config file or die
-if [ -e multi.cfg ];then
+if [ -e ${LOCATION}/multi.cfg ];then
 . ${LOCATION}/multi.cfg
 else
+   logger "FATAL" "Missing file ${LOCATION}/multi.cfg"
    echo "Please set up the ${LOCATION}/multi.cfg file."
    exit 1
 fi
@@ -36,6 +64,7 @@ fi
 
 case $1 in
    [Uu]*)
+   logger "DEBUG" "`date` Starting an update of the images.lst file"
    echo "`date` Starting an update of the images.lst file"
    echo "Indexing path data defined in config file..."
    echo "This may take awhile depending on how many new files there are..."
@@ -56,13 +85,14 @@ case $1 in
    ;;
    [Nn]*)
    echo "`date` Full index of all images starting for images_full.lst file"
+   logger "INFO" "multi_update.sh Full index of all images starting for images_full.lst file"
    rm -f ${LOCATION}/images_full.lst
-   touch ${LOCATION}/images_full.lst
 
    echo "Indexing path data defined in config file..."
    echo "This may take awhile depending on how many files there are..."
 
    echo "Finding all image files to verify"
+   logger "DEBUG" "multi_update.sh finding all images to verify and add to /tmp/image_wip_$$.lst"
    find ${INDEX} -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \; >> /tmp/image_wip_$$.lst
    PROC=`cat /proc/cpuinfo | grep -c processor`
    for x in `cat /tmp/image_wip_$$.lst` ;do
@@ -71,7 +101,8 @@ case $1 in
        sleep 1
      done
    done
-   rm -f /tmp/image_wip$$.lst
+   cat /tmp/image_wip_$$.lst | uniq > ${LOCATION}/images_full.lst
+   rm -f /tmp/image_wip_$$.lst
    ;;
    [Rr]*)
    echo "Randomize the images.lst file"

@@ -64,7 +64,7 @@ local SEV=$(echo "${SEV}" | tr [:lower:] [:upper:])
 local LDATE=$(date "+%F %H:%M:%S")
 
 # Set our output now into our "logfile"
-echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUTFILE}
+echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUT_FILE}
 
 }
 
@@ -390,11 +390,12 @@ else
 fi
 
 shopt -s nocasematch
-
+logger "INFO" "Testing case for $1"
 case ${1} in
-  N|Ne*)  nice nohup ${LOCATION}/multi_update.sh New &> /dev/null; exit 0    ;;
-  U|Upd*) nice nohup ${LOCATION}/multi_update.sh Update &> /dev/null; exit 0    ;;
-  R|Ran*) nohup ${LOCATION}/multi_update.sh Random &> /dev/null; exit 0    ;;
+  [Nn]e*)  nice nohup ${LOCATION}/multi_update.sh New &> /dev/null
+  logger "DEBUG" "Running multi_update.sh New" ; exit 0 ;;
+  [Uu]pd*) nice nohup ${LOCATION}/multi_update.sh Update &> /dev/null; exit 0    ;;
+  [Rr]an*) nohup ${LOCATION}/multi_update.sh Random &> /dev/null; exit 0    ;;
   -h|h|H|Hel*) usage;  exit 1    ;;
   *)      # Allow anyhthing, as Instant is not defined here (yet)    ;;
 esac
