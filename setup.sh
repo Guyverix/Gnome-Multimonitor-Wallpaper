@@ -17,13 +17,15 @@ fi
 
 # Set default
 
-USERID=`got_root`
-if [[ "${USERID}" == "root" ]];then
+USERID1=`got_root`
+if [[ "${USERID1}" == "root" ]];then
   echo "sudo is required only when running mate, this should be run as yourself (so we can find your home directory)"
   exit 1
 else
   echo "Confirmed we are not running as root user... Continuing"; sleep .5
 fi
+
+USERID=$(whoami)
 
 if [[ ! -d ~/.multi_wall ]];then
   mkdir ~/.multi_wall 2>&1 >/dev/null
