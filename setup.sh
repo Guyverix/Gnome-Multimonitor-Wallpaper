@@ -18,15 +18,15 @@ fi
 # Set default
 
 USERID=`got_root`
-if [ "${USERID}" == "root" ];then
+if [[ "${USERID}" == "root" ]];then
   echo "sudo is required only when running mate, this should be run as yourself (so we can find your home directory)"
   exit 1
 else
   echo "Confirmed we are not running as root user... Continuing"; sleep .5
 fi
 
-if [ ! -e "~/.multi_wall" ];then
-  mkdir ~/.multi_wall
+if [[ ! -e "~/.multi_wall" ]];then
+  mkdir ~/.multi_wall 2>&1 >/dev/null
   cp -R * ~/.multi_wall/
 else
   echo "The .multi_wall directory already exists"
@@ -39,7 +39,7 @@ fi
 
 # Assume that the user who is running setup will be the only one
 # This will not damage other users of the system
-if [ ! -e /home/${USER}/.multi_wall/images.lst ];then
+if [[ ! -e /home/${USER}/.multi_wall/images.lst ]];then
   echo "Configure  /home/${USER}/.multi_wall/multi.cfg with the needed path for images and monitor resolutions"
   echo "See the README in the .multi_wall directory for details.  Additional examples are included in the directory"
   echo "or on github."
