@@ -1,12 +1,12 @@
 # Multi Monitor Wallpaper changer
 
-These scripts make a wallpaper changer via the system tray.  It is intended for Gnome like systems, as well
-as MATE, XFCE, and Cinnamon desktops.  The project has grown a bit from 2011 when it was a simple set of
+These scripts make a wallpaper changer via the system tray.  It is intended for Gnome like systems (MATE and
+Cinnimon specifically) as well as XFCE desktops.  The project has grown a bit from 2011 when it was a simple set of
 bash scripts for my six headed display.  There is now a desktop icon to do much of the same functionality
 in a nicer way.
 
 The intent is to change X number of wallpapers on your desktop, and while most desktop managers have an
-iption for a "slideshow" like change, they do not support the concept of independent wallpapers per monitor
+option for a "slideshow" like change, they do not support the concept of independent wallpapers per monitor
 and then spanning a giant one acrosss all monitors if it meets certain criteria.
 
 The system supports multiple rows of monitors in either a horozontal or vertical configuration.  Normally users
