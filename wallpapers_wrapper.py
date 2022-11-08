@@ -221,7 +221,7 @@ class Indicator():
                 Popen(['kwrite',os.environ['HOME']+'/.multi_wall/multi.cfg'])
             elif which('xed') is not None:
                 Popen(['xed',os.environ['HOME']+'/.multi_wall/multi.cfg'])
-            else
+            else:
                 Popen(['notify-send','Multiwall: Error could not open config file multi.cfg with any known editor'])
         except CalledProcessError:                                  # Notify if we cannot edit multi.cfg for some reason
             Popen(['notify-send','Multiwall: Error could not open config file multi.cfg with any known editor'])
