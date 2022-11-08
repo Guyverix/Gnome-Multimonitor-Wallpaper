@@ -178,6 +178,8 @@ class Indicator():
           Popen(['notify-send','Multiwallpaper: Reindexing ALL images this will take some time'])
           new = Popen([os.environ['HOME']+'/.multi_wall/wallpapers', 'new'])
           new.wait()
+          if new.returncode == 0:
+            Popen(['notify-send','Multiwallpaper: Reindexing is complete'])
         except:
           Popen(['notify-send','Multiwallpaper: Reindexing ALL images failed'])
 
