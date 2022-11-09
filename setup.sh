@@ -55,10 +55,15 @@ else
 fi
 sleep .5
 
+if [[ ! -e /home/${USER}/.multi_wall/multi.cfg ]];then
+  cp /home/${USER}/.multi_wall/EXAMPLES/multi_3_head_cfg_example /home/${USER}/.multi_wall/multi.cfg
+  echo "No multi.cfg file was found.  Three headed config pulled from EXAMPLES directory to use"
+fi
+
 # If cinnamon is installed, get the pathing in there
 if [[ -e ~/.cinnamon ]]; then
   echo "A Cinnamon config directory was found."
-  # Here is where we add to the desktop autorun ABILITY.  Do not turn on by default, thats just rude.
+  # Here is where we add to the desktop menu ABILITY.  Do not turn on by default, thats just rude.
   if [[ ! -e ~/.local/share/applications/multiwall.desktop ]]; then
     cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.local/share/applications/multiwall.desktop
     echo "Application has been added to the Menu as Multi_Wallpaper"
@@ -82,6 +87,7 @@ fi
 if [[ ! -e ~/.config/autostart ]]; then
   mkdir ~/.config/autostart
 fi
+
 if [[ ! -e ~/.config/autostart/multiwallpaper.desktop ]] ; then
   cat multiwallpaper.desktop | sed "s/USERID/${USERID}/g" > ~/.config/autostart/multiwallpaper.desktop
   echo "Application is set to start on login but not change wallpapers"
@@ -92,8 +98,7 @@ if [[ ! $(which identify) ]]; then
   echo "Please install ImageMagick via: sudo apt install imagemagick"
 fi
 
-# Check if Generic Gnome installed
-
 # Check if XFCE installed
+# Run anything special that we might need here
 
 echo "Setup complete"; exit 0

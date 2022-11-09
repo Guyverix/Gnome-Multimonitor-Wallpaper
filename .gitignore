@@ -5,3 +5,4 @@ backup*
 /*.log
 /*.pid
 /multi.cfg
+/background.jpg
