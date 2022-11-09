@@ -47,7 +47,7 @@ fi
 local SEV=$(echo "${SEV}" | tr [:lower:] [:upper:])
 local LDATE=$(date "+%F %H:%M:%S")
 # Set our output now into our "logfile"
-echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUT_FILE}
+echo -e "${LDATE} ${SEV} - $0 - ${STR}" >> ${OUT_FILE}
 
 }
 
@@ -64,55 +64,56 @@ fi
 
 case $1 in
    [Uu]*)
-   logger "DEBUG" "`date` Starting an update of the images.lst file"
-   echo "`date` Starting an update of the images.lst file"
-   echo "Indexing path data defined in config file..."
-   echo "This may take awhile depending on how many new files there are..."
-   PROC=`cat /proc/cpuinfo | grep -c processor`
-
-   while read x; do
-     ${LOCATION}/identify.sh "${x}" &
-     while [ `ps aux | grep -c '[i]dentify'` -gt ${PROC} ]; do
-       sleep 1
-     done
-   # Ignore lost+found find /home/USER/Wallpapers -name '*lost+found*' -prune -follow -o -type f -mtime +1
-   # find /home/USER/Wallpapers  -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;
-   done < <(find ${INDEX} -name '*lost+found*' -prune -follow -type f -mtime -${REFRESH} \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
-   # Do not allow duplicate entries
-   touch ${LOCATION}/images_full.tmp
-   cat ${LOCATION}/images_full.lst | uniq  >> ${LOCATION}/images_full.tmp
-   mv ${LOCATION}/images_full.tmp ${LOCATION}/images_full.lst
-   ;;
+     logger "DEBUG" "Starting an update of the images.lst file"
+     echo "`date` Starting an update of the images.lst file"
+     echo "Indexing path data defined in config file..."
+     echo "This may take awhile depending on how many new files there are..."
+     PROC=`cat /proc/cpuinfo | grep -c processor`
+     while read x; do
+       ${LOCATION}/identify.sh "${x}" &
+       while [ $(ps aux | grep -c '[i]dentify.sh') -gt ${PROC} ]; do
+         sleep 1
+       done
+       # Ignore lost+found find /home/USER/Wallpapers -name '*lost+found*' -prune -follow -o -type f -mtime +1
+       # find /home/USER/Wallpapers  -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;
+     done < <(find ${INDEX} -name '*lost+found*' -prune -follow -type f -mtime -${REFRESH} \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \;)
+     # Do not allow duplicate entries
+     touch ${LOCATION}/images_full.tmp
+     cat ${LOCATION}/images_full.lst | uniq  >> ${LOCATION}/images_full.tmp
+     mv ${LOCATION}/images_full.tmp ${LOCATION}/images_full.lst
+     logger "DEBUG" "Completed search of images less than ${REFRESH} days old"
+     ;;
    [Nn]*)
-   echo "`date` Full index of all images starting for images_full.lst file"
-   logger "INFO" "multi_update.sh Full index of all images starting for images_full.lst file"
-   rm -f ${LOCATION}/images_full.lst
-
-   echo "Indexing path data defined in config file..."
-   echo "This may take awhile depending on how many files there are..."
-
-   echo "Finding all image files to verify"
-   logger "DEBUG" "multi_update.sh finding all images to verify and add to /tmp/image_wip_$$.lst"
-   find ${INDEX} -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \; >> /tmp/image_wip_$$.lst
-   PROC=`cat /proc/cpuinfo | grep -c processor`
-   for x in `cat /tmp/image_wip_$$.lst` ;do
-     ${LOCATION}/identify.sh "${x}" &
-     while [ `ps aux | grep -c '[i]dentify'` -gt ${PROC} ]; do
-       sleep 1
+     echo "Full index of all images starting for images_full.lst file"
+     logger "INFO" "Full index of all images starting for images_full.lst file"
+     rm -f ${LOCATION}/images_full.lst
+     logger "DEBUG" "Removed old ${LOCATION}/images_full.lst if it was present"
+     echo "Indexing path data defined in config file..."
+     echo "This may take awhile depending on how many files there are..."
+     echo "Finding all image files to verify"
+     logger "DEBUG" "finding all images to verify and add to /tmp/image_wip_$$.lst"
+     find ${INDEX} -follow -type f -name "*lost+found*" -prune -o \( -name "*.jpg" -o -name "*.png" \) -exec echo {} \; >> /tmp/image_wip_$$.lst
+     PROC=`cat /proc/cpuinfo | grep -c processor`
+     for x in `cat /tmp/image_wip_$$.lst` ;do
+       ${LOCATION}/identify.sh "${x}" &
+       while [ $(ps aux | grep -c '[i]dentify.sh') -gt ${PROC} ]; do
+         sleep 1
+       done
      done
-   done
-   cat /tmp/image_wip_$$.lst | uniq > ${LOCATION}/images_full.lst
-   rm -f /tmp/image_wip_$$.lst
-   ;;
+     rm -f /tmp/image_wip_$$.lst
+     logger "DEBUG" "Removed temp file /tmp/image_wip_$$.lst"
+     ;;
    [Rr]*)
-   echo "Randomize the images.lst file"
-   cat ${LIST} | while read line; do echo "$RANDOM $line"; done | sort | sed -r 's/^[0-9]+ //' > ${LOCATION}/images.changed
-   mv ${LOCATION}/images.changed ${LIST}
-   ;;
+     echo "Randomize the images.lst file"
+     logger "INFO" "Command given to randomize the images file"
+     cat ${LIST} | while read line; do echo "$RANDOM $line"; done | sort | sed -r 's/^[0-9]+ //' > ${LOCATION}/images.changed
+     mv ${LOCATION}/images.changed ${LIST}
+     ;;
    *)
-   echo "No valid options given, exiting before I do something wrong"
-   echo "Valid options for this script are N (new) U (Update) R (Randomize) image list"
-   ;;
+     logger "ERROR" "No args given that I recognise.  Was passed: ${1}"
+     echo "No valid options given, exiting before I do something wrong"
+     echo "Valid options for this script are N (new) U (Update) R (Randomize) image list"
+     ;;
 esac
 
 exit 0

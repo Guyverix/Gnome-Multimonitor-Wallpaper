@@ -48,6 +48,9 @@ EOF
 #       RETURNS:  NONE
 #===============================================================================
 logger() {
+# Logging basics
+OUT_FILE=${LOCATION}/multi_wallpapers.log
+
 local SEV=$1
 local STR=$2
 if [[ -z ${STR} ]]; then
@@ -64,7 +67,7 @@ local SEV=$(echo "${SEV}" | tr [:lower:] [:upper:])
 local LDATE=$(date "+%F %H:%M:%S")
 
 # Set our output now into our "logfile"
-echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUT_FILE}
+echo -e "${LDATE} ${SEV} - $0 - ${STR}" >> ${OUT_FILE}
 
 }
 
@@ -75,16 +78,21 @@ echo -e "${LDATE} ${SEV} - ${STR}" >> ${OUT_FILE}
 #       RETURNS:  YES/NO
 #===============================================================================
 full_spanner() {
+logger "INFO" "full_spanner input ${@}"
 local full_x=${RT_SIZE_SPAN_X}
 local full_y=${RT_SIZE_SPAN_Y}
-local check_x=`echo "${@}" | awk '{print $NF}' | sed "s/'//g" | awk -F'x' '{print $1}'`
-local check_y=`echo "${@}" | awk '{print $NF}' | sed "s/'//g" | awk -F'x' '{print $2}'`
+local check_x=$(echo "${@}" | awk '{print $NF}' | sed -e "s/['\"]//g" | awk -F'x' '{print $1}')
+local check_y=$(echo "${@}" | awk '{print $NF}' | sed -e "s/['\"]//g" | awk -F'x' '{print $2}')
 local return=NO
+logger "DEBUG" "full_spanner checking resolution X agianst full_spanner: thresh ${full_x} less than value ${check_x}"
+logger "DEBUG" "full_spanner checking resolution Y against full_spanner: thresh ${full_y} less than value ${check_y}"
 
-if [ ${check_x} -gt ${full_x} -a ${check_y} -gt ${full_y} ];then
+#if [ ${check_x} -gt ${full_x} -a ${check_y} -gt ${full_y} ];then
+if [[ ${check_x} -gt ${full_x} ]] && [[ ${check_y} -gt ${full_y} ]];then
   # We know this is valid for spanning ALL monitors
   local return=YES
 fi
+logger "INFO" "full_spanner will this be a full_spanning candidate: ${return}"
 
 echo "${return}"
 }
@@ -98,14 +106,18 @@ echo "${return}"
 row_spanner() {
 eval full_x='${R'${RSTART}'_SIZE_SPAN_X}'
 eval full_y='${R'${RSTART}'_SIZE_SPAN_Y}'
-local check_x=`echo "${@}" | awk '{print $NF}' | sed "s/'//g" | awk -F'x' '{print $1}'`
-local check_y=`echo "${@}" | awk '{print $NF}' | sed "s/'//g" | awk -F'x' '{print $2}'`
+local check_x=$(echo "${@}" | awk '{print $NF}' | sed -e "s/['\"]//g" | awk -F'x' '{print $1}')
+local check_y=$(echo "${@}" | awk '{print $NF}' | sed -e "s/['\"]//g" | awk -F'x' '{print $2}')
 local return=NO
+logger "DEBUG" "row_spanner checking resolution X agianst row_spanner: thresh ${full_x} less than value ${check_x}"
+logger "DEBUG" "row_spanner checking resolution Y against row_spanner: thresh ${full_y} less than value ${check_y}"
 
-if [ ${check_x} -gt ${full_x} -a ${check_y} -gt ${full_y} ];then
+#if [ ${check_x} -gt ${full_x} -a ${check_y} -gt ${full_y} ];then
+if [[ ${check_x} -gt ${full_x} ]] && [[ ${check_y} -gt ${full_y} ]];then
   # We know this is valid for spanning the row of monitors
   local return=YES
 fi
+logger "INFO" "row_spanner will this be a row_spanning candidate: ${return}"
 
 echo "${return}"
 }
@@ -122,28 +134,28 @@ local range=`grep -c '^' ${LIST}`
 
 if [ "${SEARCH}" = "RANDOM" ];then
   local pick=$[ (${RANDOM} % ${range} ) +1 ]
-  local image=`awk "NR==${pick}" "${LIST}"`
+  local image=$(awk "NR==${pick}" "${LIST}")
   # logging to confirm we really get random images
-  echo "Max: ${range} Pick: ${pick} Detail: ${image}" >> ${LOCATION}/random.log
+  logger "INFO" "grab_image random Max: ${range} Pick: ${pick} Detail: ${image}"
 else
   if [ -e ${LOCATION}/multi.count ];then
-    local counts=`cat ${LOCATION}/multi.count`
+    local counts=$(cat ${LOCATION}/multi.count)
     if [ -z ${counts} ];then
       counts=0
     fi
     if [ ${counts} -ge ${range} ];then
       counts=1
     fi
-    local image=`awk "NR==${counts}" "${LIST}"`
+    local image=$(awk "NR==${counts}" "${LIST}")
     counts=$(($counts +1))
     echo "$counts" > ${LOCATION}/multi.count
   else
     local counts=1
-    local image=`awk "NR==${counts}" "${LIST}"`
+    local image=$(awk "NR==${counts}" "${LIST}")
     echo "$counts" > ${LOCATION}/multi.count
   fi
+  logger "INFO" "grab_image sequence line: ${counts} image: ${image}"
 fi
-
 echo "${image}"
 }
 
@@ -157,7 +169,7 @@ create_full_span() {
   #echo create full span
   local fin_image=`echo ${FULL_SPAN} | awk '{print $1}' | sed "s/'//g"`
   #nice  convert ${fin_image} -gravity "${GRAVITY_SPAN}" -background ${BG_COLOR} -resize ${SPAN_SIZE_RT} ${LOCATION}/background.jpg
-#NORMAL  convert ${fin_image} -background ${BG_COLOR} -resize ${SPAN_SIZE_RT} ${LOCATION}/background.jpg
+  #NORMAL  convert ${fin_image} -background ${BG_COLOR} -resize ${SPAN_SIZE_RT} ${LOCATION}/background.jpg
   convert ${fin_image} -background ${BG_COLOR} -resize ${SPAN_SIZE_RT}\! ${LOCATION}/background.jpg #ignore aspect ratio using bang
   if [ "${WIN_MANAGER}" == "GNOME" ];then
     gconftool-2 --set "/desktop/gnome/background/picture_options" --type string "spanned"
@@ -168,7 +180,7 @@ create_full_span() {
   else
     gsettings set org.gnome.desktop.background picture-options 'spanned'
   fi
-
+  logger "DEBUG" "create_full_span settings against Window manager ${WIN_MANAGER}.  This could use some validation"
 }
 
 
@@ -185,6 +197,7 @@ create_row_span() {
   local fin_image=`echo ${ROW_SPAN} | awk '{print $1}' | sed "s/'//g"`
   #nice  convert ${fin_image} -background ${BG_COLOR} -gravity "${GRAVITY1}" -resize ${row_size}  -extent ${row_size} /tmp/multi_wall_row_${row_span}.jpg
   convert ${fin_image} -background ${BG_COLOR} -gravity "${GRAVITY1}" -resize ${row_size}  -extent ${row_size} /tmp/multi_wall_row_${row_span}.jpg
+  logger "DEBUG" "create_row_span running convert for row spanners"
 }
 
 #===  FUNCTION  ================================================================
@@ -201,6 +214,7 @@ create_descrete() {
   eval row_size='${R'${RSTART}'_['$j']}'
   #  nice  convert ${fin_image} -background ${BG_COLOR} -gravity "${GRAVITY1}" -resize ${row_size} -extent ${row_size} /tmp/multi_wall_row_${row_span}_${i}.jpg
   convert ${fin_image} -background ${BG_COLOR} -gravity "${GRAVITY1}" -resize ${row_size} -extent ${row_size} /tmp/multi_wall_row_${row_span}_${i}.jpg
+  logger "DEBUG" "create_descrete running convert for a discrete image to resize it"
 }
 
 #===  FUNCTION  ================================================================
@@ -226,6 +240,7 @@ merge_descrete() {
   eval row_size='$SPAN_SIZE_R'${CSTART}
   #nice  convert ${fin_image} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${orentation}append /tmp/multi_wall_row_${row_span}.jpg
   convert ${fin_image} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${orentation}append /tmp/multi_wall_row_${row_span}.jpg
+  logger "INFO" "merge_descrete running convert to append images together in the tmp directory"
 }
 
 #===  FUNCTION  ================================================================
@@ -250,6 +265,7 @@ create_merge() {
     local row_size=${SPAN_SIZE_RT}
     #nice  convert ${images} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${merge}append ${LOCATION}/background.jpg
     convert ${images} -background ${BG_COLOR} -gravity "${GRAVITY1}" ${merge}append ${LOCATION}/background.jpg
+    logger "INFO" "create_merge running convert to append images together for row and create the background.jpg"
     if [ "${WIN_MANAGER}" == "GNOME" ];then
       gconftool-2 --set "/desktop/gnome/background/picture_options" --type string "spanned"
       gconftool-2 -t string -s /desktop/gnome/background/picture_filename ${LOCATION}/background.jpg
@@ -263,6 +279,7 @@ create_merge() {
       # Catchall for fallthough (if XFCE manages to get here)
       FOO=0
     fi
+    logger "INFO" "create_merge setting desktop values via gsettings and dconf for Window manager ${WIN_MANAGER}"
   fi
 }
 
@@ -292,14 +309,16 @@ local compare=`echo "${1}" | sed 's|x| / |'`
 local check=`echo "scale=4; ${compare}" | bc`
 local verify=`echo "scale=4; (${compare} * 100) / ${monit}" | bc`
 
-if [[ `echo "${verify} > ${ratio}" | bc` -gt 0 ]] && [[ `echo "${verify} < 1.9" | bc` -gt 0 ]] ;then
-  echo "3"
-elif [[ `echo "scale=2; ${check} == 1.333" | bc` -gt 0 ]];then
-  echo "3"
+if [[ $(echo "${verify} > ${ratio}" | bc) -gt 0 ]] && [[ $(echo "${verify} < 1.9" | bc) -gt 0 ]] ;then
+  local  RET="3"
+elif [[ `echo "scale=2; ${check} == 1.333" | bc` -gt 0 ]]; then
+  local RET="3"
 else
-  echo "4"
+  local RET="4"
 fi
-
+logger "DEBUG" "xfce_stretch attempt to see if ratios get really screwy with a given value"
+logger "DEBUG" "xfce_stretch result: ${RET}.  3=stretched 4=scaled"
+echo ${RET}
 }
 
 #===  FUNCTION  ================================================================
@@ -309,22 +328,26 @@ fi
 #       RETURNS:  none
 #===============================================================================
 xfce_only() {
+# this kinda sucks, and I doubt it is how xfce behaves nowadays.  This will
+# need a revist soon
 
 # Monitor #1
 local RAW1="$(grab_image)"
-local SIZE1=`echo "${RAW1}" | awk '{print $NF}' | sed "s|['\]||g"`
+local SIZE1=$(echo "${RAW1}" | awk '{print $NF}' | sed "s|['\]||g")
 local STYLE1="$(xfce_stretch ${SIZE1})"
-local WP1=`echo "${RAW1}" | awk '{print $1}' | sed "s|['\]||g"`
+local WP1=$(echo "${RAW1}" | awk '{print $1}' | sed "s|['\]||g")
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor1/image-style -s ${STYLE1}
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor1/image-path -s "${WP1}" 2> /dev/null
 
 # Monitor #0
 local RAW2="$(grab_image)"
-local SIZE2=`echo "${RAW2}" | awk '{print $NF}' | sed "s|['\]||g"`
+local SIZE2=$(echo "${RAW2}" | awk '{print $NF}' | sed "s|['\]||g")
 local STYLE2="$(xfce_stretch ${SIZE2})"
-local WP2=`echo $(grab_image) | awk '{print $1}' | sed "s|['\]||g"`
+local WP2=$(echo $(grab_image) | awk '{print $1}' | sed "s|['\]||g")
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s ${STYLE2}
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "${WP2}" 2> /dev/null
+logger "DEBUG" "xfce_only setting xfconf-query values from the xfce_stretch function"
+logger "DEBUG" "xfce_only this entire function needs validated again.  Likely has changed"
 }
 
 
@@ -351,6 +374,7 @@ else
   xfconf-query -c xfce4-desktop -p /backdrop/screen0/xinerama-stretch -s false
   xfce_only
 fi
+logger "DEBUG" "xfce_span configure xfce to enable or disable spanning"
 }
 
 #===============================================================================
@@ -358,18 +382,16 @@ fi
 #===============================================================================
 LOCATION=/home/${USER}/.multi_wall
 
-# Logging basics
-FIL=$(echo "$0" | awk -F '/' '{print $NF}' | sed 's/\.sh/\.log/')
-OUT_FILE=${LOCATION}/${FIL} ; touch ${OUT_FILE}
-
 if [ -e ${LOCATION}/multi.cfg ];then
   . ${LOCATION}/multi.cfg
 else
   echo "Please create the configuration file: \"${LOCATION}/multi.cfg\" "
+  logger "FATAL" "Missing file: ${LOCATION}/multi.cfg"
   exit 1
 fi
 
 if [ ! -e ${LOCATION}/images.lst ];then
+  logger "DEBUG" "no file ${LOCATION}/images.lst found.  Creating file now"
   echo "Indexing images found in the path defined in config file"
   echo "This may take awhile depending on image counts"
   nice nohup ${LOCATION}/multi_update.sh New >/dev/null &
@@ -389,15 +411,23 @@ else
   WIN_MANAGER='GNOME'
 fi
 
+logger "INFO" "Setting Window manager as ${WIN_MANAGER}"
+
 shopt -s nocasematch
-logger "INFO" "Testing case for $1"
 case ${1} in
-  [Nn]e*)  nice nohup ${LOCATION}/multi_update.sh New &> /dev/null
-  logger "DEBUG" "Running multi_update.sh New" ; exit 0 ;;
-  [Uu]pd*) nice nohup ${LOCATION}/multi_update.sh Update &> /dev/null; exit 0    ;;
-  [Rr]an*) nohup ${LOCATION}/multi_update.sh Random &> /dev/null; exit 0    ;;
-  -h|h|H|Hel*) usage;  exit 1    ;;
-  *)      # Allow anyhthing, as Instant is not defined here (yet)    ;;
+  [Nn]e*) logger "INFO" "Running multi_update.sh New" ;
+          nice nohup ${LOCATION}/multi_update.sh New &> /dev/null ;
+          exit 0 ;;
+  [Uu]pd*) logger "INFO" "Running multi_update.sh Update" ;
+           nice nohup ${LOCATION}/multi_update.sh Update &> /dev/null ;
+           exit 0 ;;
+  [Rr]an*) logger "INFO" "Running multi_update.sh Random" ;
+           nohup ${LOCATION}/multi_update.sh Random &> /dev/null ;
+           exit 0 ;;
+  -h|h|H|Hel*) usage;
+               exit 1 ;;
+  *) logger "DEBUG" "Passthrough case hit with arg ${1}" ;
+      # Allow anyhthing, as Instant is not defined here (yet) ;;
 esac
 shopt -u nocasematch
 
@@ -473,8 +503,9 @@ while true; do
   find /tmp/multi_wall_row* -delete &> /dev/null
 
   shopt -s nocasematch
-  if [[ "${1}" = "instant" ]] || [[ -z "${1}" ]];then
+  if [[ "${1}" = "instant" ]] || [[ -z "${1}" ]]; then
     # If we just want a single wallaper change to occur
+    logger "INFO" "Only Instant wallpaper change requested.  Not running as a daemon"
     exit 0
   else
     # Sleep until it is time to change the wallaper again.
@@ -484,5 +515,6 @@ while true; do
 done
 
 # If we ever get to here, something has gone REALLY wrong.
+logger "FATAL" "Unexpected error found.  Exiting now"
 echo "Fatal error.  Exit now"; exit 1
 
