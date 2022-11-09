@@ -4,4 +4,4 @@ backup*
 /*.swp
 /*.log
 /*.pid
-
+/multi.cfg

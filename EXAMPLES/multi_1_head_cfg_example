@@ -8,18 +8,11 @@ LIST="/home/${USER}/.multi_wall/images.lst"
 # VAR SIZE is a global size for each monitor.  Define for each.
 # Keep in mind this does not equate to screens.
 
+# If we are going to do n+1 per row, we have to say how many rows.
+ROWS=1
+
 #row 1 (top) left to right
 R1_[0]="1280x1024"
-R1_[1]="1280x1024"
-R1_[2]="1280x1024"
-
-#row 2 (bottom) left to right
-R2_[0]="1280x1024"
-R2_[1]="1280x1024"
-R2_[2]="1280x1024"
-
-# If we are going to do n+1 per row, we have to say how many rows.
-ROWS=2
 
 # Define your row orentation vertical, or horizontal
 # img+img+img
@@ -33,15 +26,12 @@ ORIENT="horizontal"
 
 # What kind of spanners can we do here.
 # Use xrandr -q if you dont know the span size, or resolutions.
-SPAN_SIZE_R1="3840x1024"
-SPAN_SIZE_R2="3840x1024"
-SPAN_SIZE_RT="7680x2048"
+SPAN_SIZE_R1="1280x1024"
+SPAN_SIZE_RT="1280x1024"
 
 # These are the minimums to be considered a spanner
 R1_SIZE_SPAN_X="2500"
 R1_SIZE_SPAN_Y="800"
-R2_SIZE_SPAN_X="2200"
-R2_SIZE_SPAN_Y="700"
 RT_SIZE_SPAN_X="2700"
 RT_SIZE_SPAN_Y="1200"
 
