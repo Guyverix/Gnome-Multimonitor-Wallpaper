@@ -329,25 +329,37 @@ echo ${RET}
 #===============================================================================
 xfce_only() {
 # this kinda sucks, and I doubt it is how xfce behaves nowadays.  This will
-# need a revist soon
+# need a revist soon (WIP 09-26-23)  :)
+# This sucks, but would likely require a full rewrite to support > 2 monitors, sigh...
+logger "DEBUG" "We are not using a spanner, so we must find the names for our monitors"
+local MON_COUNT=$(xfconf-query -c xfce4-desktop -l -p /backdrop/screen0 | awk -F '/' '{print $4}' | uniq | grep -v 'monitor[0-9]' | wc -l)
 
 # Monitor #1
 local RAW1="$(grab_image)"
 local SIZE1=$(echo "${RAW1}" | awk '{print $NF}' | sed "s|['\]||g")
 local STYLE1="$(xfce_stretch ${SIZE1})"
 local WP1=$(echo "${RAW1}" | awk '{print $1}' | sed "s|['\]||g")
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor1/image-style -s ${STYLE1}
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor1/image-path -s "${WP1}" 2> /dev/null
+local MON_NAME=$(xfconf-query -c xfce4-desktop -l -p /backdrop/screen0 | awk -F '/' '{print $4}' | uniq | grep -v 'monitor[0-9]' | head -${MON_COUNT} | tail -1)
 
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/image-style -s ${STYLE1}
+#xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/image-path -s "${WP1}" 2> /dev/null
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/last-image -s "${WP1}" 2> /dev/null
+
+local MON_COUNT=$((${MON_COUNT} -1 ))
+local MON_NAME=$(xfconf-query -c xfce4-desktop -l -p /backdrop/screen0 | awk -F '/' '{print $4}' | uniq | grep -v 'monitor[0-9]' | head -${MON_COUNT} | tail -1)
 # Monitor #0
 local RAW2="$(grab_image)"
 local SIZE2=$(echo "${RAW2}" | awk '{print $NF}' | sed "s|['\]||g")
 local STYLE2="$(xfce_stretch ${SIZE2})"
 local WP2=$(echo $(grab_image) | awk '{print $1}' | sed "s|['\]||g")
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s ${STYLE2}
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "${WP2}" 2> /dev/null
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/image-style -s ${STYLE2}
+#xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/image-path -s "${WP2}" 2> /dev/null
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/last-image -s "${WP2}" 2> /dev/null
 logger "DEBUG" "xfce_only setting xfconf-query values from the xfce_stretch function"
 logger "DEBUG" "xfce_only this entire function needs validated again.  Likely has changed"
+
+
+
 }
 
 
@@ -362,16 +374,22 @@ local RAW1="$(grab_image)"
 local SIZE1=`echo "${RAW1}" | awk '{print $NF}' | sed "s|['\]||g"`
 local SIZE_X=`echo "${SIZE1}" | awk -F 'x' '{print $1}'`
 local SIZE_Y=`echo "${SIZE1}" | awk -F 'x' '{print $2}'`
+# Since this is a spanner, we are only going to change the first monitor values
+# XFCE has changed how it defines the monitor however.  We need to find it first
+local MON_NAME=$(xfconf-query -c xfce4-desktop -l -p /backdrop/screen0 | awk -F '/' '{print $4}' | uniq | grep -v 'monitor[0-9]' | head -1)
+logger "DEBUG" "Checking spanner possibility and monitor name ${MON_NAME}"
 
 if [[ ${SIZE_X} -ge ${R1_SIZE_SPAN_X} ]] && [[ ${SIZE_Y} -ge ${R1_SIZE_SPAN_Y} ]];then
   local STYLE1="$(xfce_stretch ${SIZE1})"
   local WP1=`echo "${RAW1}" | awk '{print $1}' | sed "s|['\]||g"`
-  xfconf-query -c xfce4-desktop -p /backdrop/screen0/xinerama-stretch -s true
-  xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s ${STYLE1}
-  xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "${WP1}" 2> /dev/null
+  # xfconf-query -c xfce4-desktop -p /backdrop/screen0/xinerama-stretch -s true  # either deprecated or dead options
+  xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/image-style -s ${STYLE1}
+  xfconf-query -c xfce4-desktop -p /backdrop/screen0/${MON_NAME}/workspace0/image-path -s "${WP1}" 2> /dev/null
+  logger "DEBUG" "Yes, this should be a spanner"
 else
   # We only check once for a spanner, then default to split
-  xfconf-query -c xfce4-desktop -p /backdrop/screen0/xinerama-stretch -s false
+  # xfconf-query -c xfce4-desktop -p /backdrop/screen0/xinerama-stretch -s false  # dead or deprecated option
+  logger "DEBUG" "This will not be a spanner.  We will continue with the xfce_only function"
   xfce_only
 fi
 logger "DEBUG" "xfce_span configure xfce to enable or disable spanning"
@@ -400,10 +418,10 @@ if [ ! -e ${LOCATION}/images.lst ];then
 fi
 
 # See if we are running XFCE or Gnome
-X_SESSION=`ps aux | grep X11/x[i]nit | grep -c xfce`
-if [ ${X_SESSION} -gt 0 ]; then
+#X_SESSION=`ps aux | grep 'X11/x[i]nit\|xfwm4' | grep -v grep | grep -c xf`
+if [ $(ps aux | grep -c '[x]fce4-session') -gt 0 ]; then
   WIN_MANAGER='XFCE'
-elif [ `ps aux | grep -c '[c]innamon-session'` -gt 0 ];then
+elif [ $(ps aux | grep -c '[c]innamon-session') -gt 0 ];then
   WIN_MANAGER='CINNAMON'
 elif [ $(ps uax | grep -c '[m]ate-session') -gt 0 ];then
   WIN_MANAGER='MATE'
